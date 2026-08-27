@@ -1,0 +1,17 @@
+# natflow 运行配置。
+#
+# 注意：上游把这个文件放在 natflow-auth 包里，而 natflow-auth 依赖 lua-ipops
+# （只存在于 com.x-wrt），LEDE 里装不了。缺了这个文件的话，natflow-boot 的
+# `uci get natflow.main.enabled` 取不到值会回落到 0，natflow 开机就是停用状态。
+# 所以这里自己提供一份。
+
+config natflow 'main'
+	option enabled '1'
+	# hwnat/hwnat_wed 是 MediaTek PPE/WED 的开关，IPQ4019 没有对应硬件，置 0
+	option hwnat '0'
+	option hwnat_wed '0'
+	option debug '3'
+	option delay_pkts '0'
+	option go_slowpath_if_no_qos '0'
+	# 0 = 对所有接口做 fastnat
+	option ifname_group_type '0'

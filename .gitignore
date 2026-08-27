@@ -1,0 +1,11 @@
+openwrt/
+bin/
+build_dir/
+staging_dir/
+dl/
+tmp/
+*.bin
+*.ubi
+*.itb
+.config
+.config.old

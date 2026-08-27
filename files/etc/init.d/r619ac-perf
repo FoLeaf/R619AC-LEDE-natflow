@@ -1,0 +1,26 @@
+#!/bin/sh /etc/rc.common
+# 竞斗云 2.0 (IPQ4019) 转发性能调优，每次开机执行。
+#
+# natflow 本身由 natflow-boot(START=95) 负责启用，并且它会自动把所有 eth 口的
+# GRO/GSO 关掉（依赖 ethtool），正好绕开 essedma 上 GRO 与快速路径互相干扰的问题。
+# 这里只做 natflow-boot 不管的部分。
+
+START=99
+
+start() {
+	# CPU 定频到最高。小包转发时 ondemand 调速器的响应延迟会明显拉低 pps。
+	for g in /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor; do
+		[ -w "$g" ] && echo performance > "$g"
+	done
+
+	# 记录一下 natflow 是否真的起来了，方便刷完后查 logread
+	if [ -c /dev/natflow_ctl ]; then
+		logger -t r619ac-perf "natflow: $(head -n 3 /dev/natflow_ctl 2>/dev/null | tr '\n' ' ')"
+	else
+		logger -t r619ac-perf "警告：/dev/natflow_ctl 不存在，natflow 模块未加载"
+	fi
+}
+
+stop() {
+	:
+}

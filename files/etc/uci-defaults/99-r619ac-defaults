@@ -1,0 +1,27 @@
+#!/bin/sh
+# 首次开机执行一次。
+
+# 主机名
+uci -q set system.@system[0].hostname='R619AC'
+uci -q set system.@system[0].zonename='Asia/Shanghai'
+uci -q set system.@system[0].timezone='CST-8'
+uci -q commit system
+
+# 关掉 fw3 自带的 flow offloading —— 它和 natflow 抢同一条快速路径，同时开会互相打架
+uci -q set firewall.@defaults[0].flow_offloading='0'
+uci -q set firewall.@defaults[0].flow_offloading_hw='0'
+uci -q commit firewall
+
+# 默认关闭无线射频（省 CPU 和中断）。以后要用在 LuCI 里勾一下即可。
+[ -f /etc/config/wireless ] || /sbin/wifi config
+i=0
+while uci -q get "wireless.@wifi-device[$i]" >/dev/null 2>&1; do
+	uci -q set "wireless.@wifi-device[$i].disabled=1"
+	i=$((i + 1))
+done
+[ "$i" -gt 0 ] && uci -q commit wireless
+
+# files/ 里塞进来的 init 脚本默认没有 /etc/rc.d 软链，需要显式 enable
+[ -x /etc/init.d/r619ac-perf ] && /etc/init.d/r619ac-perf enable
+
+exit 0
